@@ -22,9 +22,6 @@ RUN a2enmod rewrite headers
 COPY docker/apache/000-default.conf /etc/apache2/sites-available/000-default.conf
 RUN ln -sf /etc/apache2/sites-available/000-default.conf /etc/apache2/sites-enabled/000-default.conf
 
-# Update Apache to listen on the port specified by Cloud Run (default to 8080 if not set)
-RUN sed -i 's/80/${PORT}/g' /etc/apache2/sites-available/000-default.conf /etc/apache2/ports.conf
-
 # Set working directory
 WORKDIR /var/www/html
 
@@ -37,6 +34,11 @@ COPY . .
 # Install application dependencies
 RUN composer install --no-dev --optimize-autoloader
 
+RUN mkdir -p /var/www/html/storage/framework/sessions \
+    /var/www/html/storage/framework/views \
+    /var/www/html/storage/framework/cache \
+    /var/www/html/storage/logs
+    
 # Set proper permissions for Laravel
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 
@@ -44,4 +46,5 @@ RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cac
 ENV PORT=8080
 EXPOSE $PORT
 
-CMD ["apache2-foreground"]
+# Substitute port and start Apache
+CMD sed -i "s/80/$PORT/g" /etc/apache2/sites-available/000-default.conf /etc/apache2/ports.conf && docker-php-entrypoint apache2-foreground
