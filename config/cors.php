@@ -15,11 +15,11 @@ return [
     |
     */
 
-    'paths' => ['api/*', 'sanctum/csrf-cookie'],
+    'paths' => [ '*', 'api/*', 'sanctum/csrf-cookie'],
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => ['https://attendance-frontend-2026.vercel.app', 'http://localhost:3000'],
+    'allowed_origins' => ['*','https://attendance-frontend-2026.vercel.app', 'http://localhost:3000'],
 
     'allowed_origins_patterns' => [],
 
