@@ -8,31 +8,53 @@ class UserController extends Controller
 {
     //
     public function index(){
-        return User::all();
+        // return User::all();
+        $users = User::orderBy('id', 'desc')->get();
+        return response()->json($users, 200);
     }
 
     public function show($id)
     {
-        return User::findOrFail($id);
+        $user = User::findOrFail($id);
+        return response()->json($user, 200);
     }
 
     public function store(Request $request)
     {
-        $user = User::create($request->all());
-        // return response()->json($user, 201);
-        return $user;
+        $validatedData = $request->validate([
+            'name' => 'required|string|max:255'
+        ]);
+
+        $user = User::create($validatedData);
+
+        return response()->json([
+            'message' => 'Thêm người dùng thành công!',
+            'data' => $user
+        ], 201);
     }
 
     public function update(Request $request,$id)
     {
+        $validatedData = $request->validate([
+            'name' => 'required|string|max:255'
+        ]);
+
         $user = User::findOrFail($id);
-        $user->update($request->all());
-        return $user;
+        $user->update($validatedData);
+
+        return response()->json([
+            'message' => 'Cập nhật thông tin thành công!',
+            'data' => $user
+        ], 200);
     }
 
     public function destroy($id)
     {
-        User::destroy($id);
-        return ["message" => "deleted"];
+        $user = User::findOrFail($id);
+        $user->delete();
+
+        return response()->json([
+            'message' => 'Đã xóa người dùng thành công!'
+        ], 200);
     }
 }

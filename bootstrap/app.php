@@ -11,7 +11,11 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        //
+        //Tắt bảo mật CSRF cho các đường dẫn API
+        $middleware->validateCsrfTokens(except: [
+            'users',   // Dành cho POST /users
+            'users/*'  // Dành cho PUT và DELETE /users/{id}
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
