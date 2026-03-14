@@ -3,12 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
 
-use Illuminate\Support\Facades\Artisan;
 
-Route::get('/setup-db', function () {
-    Artisan::call('migrate', ['--force' => true]);
-    return 'Quá trình tạo bảng (Migrate) đã hoàn tất!';
-});
 
 Route::get('/', function () {
     return view('welcome');
