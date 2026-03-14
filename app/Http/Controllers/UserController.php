@@ -13,7 +13,7 @@ class UserController extends Controller
 
     public function show($id)
     {
-        return User::find($id);
+        return User::findOrFail($id);
     }
 
     public function store(Request $request)
@@ -25,7 +25,7 @@ class UserController extends Controller
 
     public function update(Request $request,$id)
     {
-        $user = User::find($id);
+        $user = User::findOrFail($id);
         $user->update($request->all());
         return $user;
     }
