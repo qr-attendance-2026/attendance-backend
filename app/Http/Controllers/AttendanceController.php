@@ -14,18 +14,33 @@ class AttendanceController extends Controller
     }
 
     public function store(Request $request)
-    {
+{
+    $student_code = $request->student_code;
+    $today = date('Y-m-d');
 
-        Attendance::create([
-            'student_code'=>$request->student_code,
-            'time'=>now()
-        ]);
+    // kiểm tra đã điểm danh hôm nay chưa
+    $exists = Attendance::where('student_code', $student_code)
+                ->whereDate('time', $today)
+                ->exists();
 
+    if ($exists) {
         return response()->json([
-            'message'=>'Điểm danh thành công'
+            'status' => 'error',
+            'message' => 'Điểm danh thành công'
         ]);
     }
 
+    // nếu chưa thì lưu
+    Attendance::create([
+        'student_code' => $student_code,
+        'time' => now()
+    ]);
+
+    return response()->json([
+        'status' => 'success',
+        'message' => 'Điểm danh thành công'
+    ]);
+}
     public function list()
     {
         $data=Attendance::all();

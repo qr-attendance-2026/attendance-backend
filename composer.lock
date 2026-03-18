@@ -4,6 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
+<<<<<<< HEAD
     "content-hash": "75ca1187329275be5ad98dda6d239ea3",
     "packages": [
         {
@@ -61,6 +62,11 @@
             "time": "2022-12-07T17:46:57+00:00"
         },
         {
+=======
+    "content-hash": "c514d8f7b9fc5970bdd94287905ef584",
+    "packages": [
+        {
+>>>>>>> d534054537c2a01d07c229be3c4b59ade22dd2a6
             "name": "brick/math",
             "version": "0.14.8",
             "source": {
@@ -190,6 +196,7 @@
             "time": "2024-02-09T16:56:22+00:00"
         },
         {
+<<<<<<< HEAD
             "name": "dasprid/enum",
             "version": "1.0.7",
             "source": {
@@ -240,6 +247,8 @@
             "time": "2025-09-16T12:23:56+00:00"
         },
         {
+=======
+>>>>>>> d534054537c2a01d07c229be3c4b59ade22dd2a6
             "name": "dflydev/dot-access-data",
             "version": "v3.0.3",
             "source": {
@@ -3399,6 +3408,7 @@
             "time": "2025-12-14T04:43:48+00:00"
         },
         {
+<<<<<<< HEAD
             "name": "simplesoftwareio/simple-qrcode",
             "version": "4.2.0",
             "source": {
@@ -3467,6 +3477,8 @@
             "time": "2021-02-08T20:43:55+00:00"
         },
         {
+=======
+>>>>>>> d534054537c2a01d07c229be3c4b59ade22dd2a6
             "name": "symfony/clock",
             "version": "v7.4.0",
             "source": {
@@ -8565,5 +8577,9 @@
         "php": "^8.2"
     },
     "platform-dev": {},
+<<<<<<< HEAD
     "plugin-api-version": "2.9.0"
+=======
+    "plugin-api-version": "2.6.0"
+>>>>>>> d534054537c2a01d07c229be3c4b59ade22dd2a6
 }
