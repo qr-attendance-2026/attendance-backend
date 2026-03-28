@@ -24,8 +24,8 @@ class AttendanceController extends Controller
                 ->exists();
 
     if ($exists) {
-        return response()->json([
-            'status' => 'error',
+        return response()->json([ 
+            'status' => 'error', // đổi status
             'message' => 'Điểm danh thành công'
         ]);
     }
