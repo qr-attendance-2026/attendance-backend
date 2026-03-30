@@ -1,11 +1,11 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Teacher;
 
 use Illuminate\Http\Request;
 use App\Models\Attendance;
 
-class AttendanceController extends Controller
+class AttendanceController
 {
 
     public function index()
