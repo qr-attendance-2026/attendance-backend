@@ -9,8 +9,16 @@ class Student extends Model
     
     public $timestamps = false;
 
-    protected $fillable = ['user_id', 'student_code', 'cohort_class', 'face_id', 'qr_code_path'];
-
+    protected $fillable = [
+        'user_id', 
+        'student_code',              
+        'cohort_class',   
+        'date_of_birth',     
+        'gender',            
+        'phone_number',             
+        'face_id', 
+        'qr_code_path',
+    ];
     //RELATIONSHIPS
     public function user()
     {

@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Http\Request;
 
-class AuthController extends Controller
+class AuthController 
 {
     // ────────────────────────────────────────────────────────────────────
     // POST /api/auth/login
