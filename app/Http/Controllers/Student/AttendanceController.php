@@ -7,6 +7,7 @@ use App\Models\AttendanceRecord;
 use App\Models\AttendanceSession;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use SimpleSoftwareIO\QrCode\Facades\QrCode;
  
 class AttendanceController extends Controller
 {
@@ -191,4 +192,27 @@ class AttendanceController extends Controller
             'data' => $attendances
         ]);
     }
+
+    public function testMyQr()
+{
+    // Giả sử MSSV của bạn là DH52201784
+    $studentCode = "DH52201784"; 
+    $name = "Nguyen Thao Vy";
+
+    // Tạo nội dung QR (Dạng JSON để sau này máy quét dễ đọc)
+    $content = json_encode([
+        'mssv' => $studentCode,
+        'name' => $name,
+        'type' => 'student_id'
+    ]);
+
+    // Trả về trực tiếp hình ảnh QR để xem trên trình duyệt
+    return response(
+        QrCode::size(300)
+            ->backgroundColor(255, 255, 255)
+            ->color(0, 0, 0)
+            ->margin(1)
+            ->generate($content)
+    )->header('Content-Type', 'image/svg+xml');
+}
 }
