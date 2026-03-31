@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Imports\StudentsImport;
+use App\Imports\TeachersImport;
+use App\Imports\ScheduleImport;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
@@ -25,6 +27,8 @@ class ImportController
             'data'    => $import->results,
         ], 200);
     }
+
+
  
     // teachers() and schedule() follow the same pattern — create
     // TeachersImport and ScheduleImport classes similarly.

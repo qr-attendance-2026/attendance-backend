@@ -2,7 +2,9 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+
 use App\Http\Controllers\Admin\UserController;
+
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Admin\ImportController;
 use App\Http\Controllers\Admin\CourseClassController as AdminClassController;
@@ -13,6 +15,8 @@ use App\Http\Controllers\Teacher\AttendanceController as TeacherAttendanceContro
 use App\Http\Controllers\Teacher\CourseClassController as TeacherClassController;
 use App\Http\Controllers\Student\ProfileController;
 use App\Http\Controllers\Student\AttendanceController as StudentAttendanceController;
+
+
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -39,6 +43,7 @@ Route::middleware(['auth:sanctum', 'role:admin'])->prefix('admin')->group(functi
     Route::post('import/schedule',  [ImportController::class, 'schedule']);
 
     // User management
+
     Route::get('users', [UserController::class, 'index']);
     Route::get('users/{id}', [UserController::class, 'show']);
     Route::post('/users', [UserController::class,'store']); //tạo acc bằng tay
@@ -46,6 +51,7 @@ Route::middleware(['auth:sanctum', 'role:admin'])->prefix('admin')->group(functi
     Route::delete('users/{id}', [UserController::class, 'destroy']);
     Route::patch('users/{id}/toggle-active', [UserController::class, 'toggleActive']);
     Route::post('users/{id}/reset-password', [UserController::class, 'resetPassword']);
+
 
 
     // Subjects
@@ -66,7 +72,9 @@ Route::middleware(['auth:sanctum', 'role:teacher'])->prefix('teacher')->group(fu
 
     // Own class list
     Route::get('course-classes',        [TeacherClassController::class, 'index']);
+
     Route::post('course-classes',       [TeacherClassController::class, 'store']);
+
     Route::get('course-classes/{id}',   [TeacherClassController::class, 'show']);
 
     // QR Session management
@@ -98,7 +106,9 @@ Route::middleware(['auth:sanctum', 'role:student'])->prefix('student')->group(fu
 
     // Own schedule
     Route::get('schedule', [ProfileController::class, 'schedule']);
+
 });
+
 
 
 

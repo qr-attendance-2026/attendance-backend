@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Teacher;
 
+
 use App\Http\Controllers\Controller;
 use App\Models\AttendanceRecord;
 use App\Models\AttendanceSession;
@@ -112,4 +113,5 @@ class AttendanceController extends Controller
             'data' => $record,
         ], 200);
     }
+
 }

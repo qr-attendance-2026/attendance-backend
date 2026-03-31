@@ -16,8 +16,9 @@ use App\Http\Controllers\Student\AttendanceController as StudentAttendanceContro
 
 
 Route::get('/', function () {
+
     return view('class');
-});
+
 
 
 //Attendance

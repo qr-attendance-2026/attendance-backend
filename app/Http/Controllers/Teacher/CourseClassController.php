@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Teacher;
 
+
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\Controller;
 use App\Models\CourseClass;

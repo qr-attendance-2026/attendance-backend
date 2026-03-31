@@ -1,14 +1,18 @@
 <?php
 
 namespace App\Http\Controllers\Auth;
+
 use App\Http\Controllers\Controller;
+
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Http\Request;
 
+
 class AuthController extends Controller
+
 {
     // ────────────────────────────────────────────────────────────────────
     // POST /api/auth/login

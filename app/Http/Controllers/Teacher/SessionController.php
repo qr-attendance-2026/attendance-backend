@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers\Teacher;
 
+
 use App\Http\Controllers\Controller;
+
 use App\Models\AttendanceRecord;
 use App\Models\AttendanceSession;
 use App\Models\CourseClass;
@@ -10,6 +12,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+
 use Illuminate\Support\Facades\Auth;
 // use SimpleSoftwareIO\QrCode\Facades\QrCode;
 use BaconQrCode\Writer;
@@ -192,4 +195,5 @@ class SessionController extends Controller
             ],
         ], 200);
     }
+
 }

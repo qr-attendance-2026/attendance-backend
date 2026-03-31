@@ -17,6 +17,7 @@ class AttendanceRecord extends Model
         'is_makeup'  => 'boolean',
     ];
  
+
     public function session()
     {
         return $this->belongsTo(AttendanceSession::class);
@@ -26,5 +27,6 @@ class AttendanceRecord extends Model
     {
         return $this->belongsTo(Student::class);
     }
+
 }
 
