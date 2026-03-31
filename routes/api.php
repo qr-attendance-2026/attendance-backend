@@ -13,6 +13,7 @@ use App\Http\Controllers\Teacher\AttendanceController as TeacherAttendanceContro
 use App\Http\Controllers\Teacher\CourseClassController as TeacherClassController;
 use App\Http\Controllers\Student\ProfileController;
 use App\Http\Controllers\Student\AttendanceController as StudentAttendanceController;
+use App\Http\Controllers\Student\AttendanceController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -97,6 +98,10 @@ Route::middleware(['auth:sanctum', 'role:student'])->prefix('student')->group(fu
 
     // Own schedule
     Route::get('schedule', [ProfileController::class, 'schedule']);
+    Route::get('/courses', [ProfileController::class, 'getCourses']);
+
+    // Thêm dòng này để xem danh sách điểm danh 
+    Route::get('/attendances', [AttendanceController::class, 'index']);
 });
 
 
