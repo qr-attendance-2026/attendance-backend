@@ -13,7 +13,12 @@ use App\Http\Controllers\Teacher\AttendanceController as TeacherAttendanceContro
 use App\Http\Controllers\Teacher\CourseClassController as TeacherClassController;
 use App\Http\Controllers\Student\ProfileController;
 use App\Http\Controllers\Student\AttendanceController as StudentAttendanceController;
-use App\Http\Controllers\Student\AttendanceController;
+use App\Http\Controllers\Student\AttendanceController; // Phải có dòng này ở đầu file
+
+
+use Illuminate\Support\Facades\Auth;
+use App\Models\User;
+
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -40,13 +45,13 @@ Route::middleware(['auth:sanctum', 'role:admin'])->prefix('admin')->group(functi
     Route::post('import/schedule',  [ImportController::class, 'schedule']);
 
     // User management
-    Route::get('users', [UserController::class, 'index']);
-    Route::get('users/{id}', [UserController::class, 'show']);
-    Route::post('/users', [UserController::class,'store']); //tạo acc bằng tay
-    Route::put('users/{id}', [UserController::class, 'update']);
-    Route::delete('users/{id}', [UserController::class, 'destroy']);
-    Route::patch('users/{id}/toggle-active', [UserController::class, 'toggleActive']);
-    Route::post('users/{id}/reset-password', [UserController::class, 'resetPassword']);
+    // Route::get('users', [UserController::class, 'index']);
+    // Route::get('users/{id}', [UserController::class, 'show']);
+    // Route::post('/users', [UserController::class,'store']); //tạo acc bằng tay
+    // Route::put('users/{id}', [UserController::class, 'update']);
+    // Route::delete('users/{id}', [UserController::class, 'destroy']);
+    // Route::patch('users/{id}/toggle-active', [UserController::class, 'toggleActive']);
+    // Route::post('users/{id}/reset-password', [UserController::class, 'resetPassword']);
 
 
     // Subjects
@@ -102,8 +107,40 @@ Route::middleware(['auth:sanctum', 'role:student'])->prefix('student')->group(fu
 
     // Thêm dòng này để xem danh sách điểm danh 
     Route::get('/attendances', [AttendanceController::class, 'index']);
-});
+    // Nằm ngoài group student
+    Route::post('/attendance/scan', [AttendanceController::class, 'scan']);
 
+
+    Route::get('/test-qr', function () {
+        // 1. Tìm user sinh viên
+        $user = User::find(1); 
+        if (!$user) return "Lỗi: Không tìm thấy User ID 1";
+    
+        // 2. Giả lập đăng nhập
+        Auth::login($user);
+    
+        // 3. Tạo payload
+        $qrPayload = json_encode([
+            'course_class_id' => 1,
+            'date'            => '2024-05-20',
+            'check_number'    => 1
+        ]);
+    
+        // 4. Gọi Controller (Dùng \Illuminate\Http\Request để ép kiểu chuẩn)
+        $fakeRequest = \Illuminate\Http\Request::create('/api/student/attendance/check-in', 'POST', [
+            'qr_payload' => $qrPayload
+        ]);
+        
+        // Gán user vào request này để controller nhận được $request->user()
+        $fakeRequest->setUserResolver(fn() => $user);
+    
+        return app(\App\Http\Controllers\Student\AttendanceController::class)->checkIn($fakeRequest);
+    });
+
+
+    
+});
+Route::get('/view-my-qr', [\App\Http\Controllers\Student\AttendanceController::class, 'testMyQr']);
 
 
 
