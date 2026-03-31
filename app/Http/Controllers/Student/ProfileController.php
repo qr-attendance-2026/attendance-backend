@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use App\Models\CourseClass;
 
 class ProfileController extends Controller
 {
@@ -21,7 +22,7 @@ class ProfileController extends Controller
         
         if ($user) {
             // Load quan hệ để lấy thông tin lớp học của sinh viên
-            $user->load(['student.courseClass']);
+            $user->load(['student.courseClasses']);
         }
 
         if ($request->wantsJson()) {
@@ -86,5 +87,16 @@ class ProfileController extends Controller
         $qrData = $student->student_code; 
 
         return view('student.profile.qr', compact('student', 'qrData'));
+    }
+
+    public function getCourses(Request $request)
+    {
+        // Lấy thông tin sinh viên đang đăng nhập cùng các lớp học của họ
+        $student = $request->user()->student->load('courseClasses');
+
+        return response()->json([
+            'success' => true,
+            'data' => $student->courseClasses
+        ]);
     }
 }

@@ -179,4 +179,16 @@ class AttendanceController extends Controller
             'data'    => $summary,
         ], 200);
     }
+    public function index(Request $request)
+    {
+        // Lấy tất cả lịch sử điểm danh của sinh viên đang đăng nhập
+        $attendances = \App\Models\Attendance::where('student_id', $request->user()->student->id)
+            ->with('courseClass') // Load thêm thông tin tên môn học
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => $attendances
+        ]);
+    }
 }
