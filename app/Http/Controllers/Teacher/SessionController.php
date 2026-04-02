@@ -2,9 +2,6 @@
 
 namespace App\Http\Controllers\Teacher;
 
-
-use App\Http\Controllers\Controller;
-
 use App\Models\AttendanceRecord;
 use App\Models\AttendanceSession;
 use App\Models\CourseClass;
@@ -21,7 +18,7 @@ use BaconQrCode\Renderer\Image\SvgImageBackEnd;
 use BaconQrCode\Renderer\RendererStyle\RendererStyle;
 
 
-class SessionController extends Controller
+class SessionController
 {
 
     public function open(Request $request): JsonResponse
@@ -87,6 +84,7 @@ class SessionController extends Controller
         //         'qr_image_url'  => Storage::url($path),
         //     ],
         // ], 201);
+
         $filename = 'session_' . $session->id . '_' . time() . '.svg';
         $storagePath = storage_path('app/public/qr/sessions');
 
@@ -149,7 +147,6 @@ class SessionController extends Controller
         $stats = [
             'total'   => $enrolledStudentIds->count(),
             'present' => $session->records()->where('status', 'present')->count(),
-            'late'    => $session->records()->where('status', 'late')->count(),
             'absent'  => $session->records()->where('status', 'absent')->count(),
         ];
 
