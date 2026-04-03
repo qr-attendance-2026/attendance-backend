@@ -106,6 +106,39 @@ Route::middleware(['auth:sanctum', 'role:student'])->prefix('student')->group(fu
 
     // Own schedule
     Route::get('schedule', [ProfileController::class, 'schedule']);
+    Route::get('/courses', [ProfileController::class, 'getCourses']);
+
+    // Thêm dòng này để xem danh sách điểm danh 
+    Route::get('/attendances', [AttendanceController::class, 'index']);
+    // Nằm ngoài group student
+    Route::post('/attendance/scan', [AttendanceController::class, 'scan']);
+
+
+    Route::get('/test-qr', function () {
+        // 1. Tìm user sinh viên
+        $user = User::find(1); 
+        if (!$user) return "Lỗi: Không tìm thấy User ID 1";
+    
+        // 2. Giả lập đăng nhập
+        Auth::login($user);
+    
+        // 3. Tạo payload
+        $qrPayload = json_encode([
+            'course_class_id' => 1,
+            'date'            => '2024-05-20',
+            'check_number'    => 1
+        ]);
+    
+        // 4. Gọi Controller (Dùng \Illuminate\Http\Request để ép kiểu chuẩn)
+        $fakeRequest = \Illuminate\Http\Request::create('/api/student/attendance/check-in', 'POST', [
+            'qr_payload' => $qrPayload
+        ]);
+        
+        // Gán user vào request này để controller nhận được $request->user()
+        $fakeRequest->setUserResolver(fn() => $user);
+    
+        return app(\App\Http\Controllers\Student\AttendanceController::class)->checkIn($fakeRequest);
+    });
 
 });
 
