@@ -1,6 +1,6 @@
 <?php
 
-use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\Admin\UserController;
@@ -18,12 +18,12 @@ use App\Http\Controllers\Student\AttendanceController as StudentAttendanceContro
 
 Route::get('/user', function (Request $request) {
     return $request->user();
-})->middleware('auth:sanctum');
+})->middleware('auth:sanctum'); 
 
 // Public routes (no token required)
 Route::post('/auth/login', [AuthController::class, 'login']);
 
-// Authenticated routes
+// Authenticated routes 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/auth/logout', [AuthController::class, 'logout']);
     Route::get('/auth/me',     [AuthController::class, 'me']);
