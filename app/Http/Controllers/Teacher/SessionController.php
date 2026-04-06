@@ -29,15 +29,15 @@ class SessionController
             'duration_minutes' => ['integer', 'min:1', 'max:120'],
         ]);
 
-        $teacher = (int) Auth::id();
+        $teacher = $request->user()->teacher;
 
-
+        // Verify this class belongs to the authenticated teacher
         $class = CourseClass::where('id', $request->course_class_id)
-            ->where('teacher_id', $teacher)
+            ->where('teacher_id', $teacher->id)
             ->firstOrFail();
 
-        $checkNumber     = $request->input('check_number', 1);
-        $durationMinutes = $request->input('duration_minutes', 15);
+        $checkNumber     = (int) $request->input('check_number', 1);
+        $durationMinutes = (int) $request->input('duration_minutes', 15);
 
 
         $payload = json_encode([
@@ -57,52 +57,11 @@ class SessionController
                 'check_number'    => $checkNumber,
             ],
             [
-                'qr_payload'    => $payload,
+                'qr_payload'    => $payload, // stored in DB — used for server-side validation
                 'qr_expires_at' => now()->addMinutes($durationMinutes),
             ]
         );
 
-
-        // $filename = 'session_' . $session->id . '_' . time() . '.png';
-        // $path     = 'qr/sessions/' . $filename;
-
-        // // tạo QR (KHÔNG dùng imagick)
-        // $qr = QrCode::size(300)->generate($payload);
-
-        // // lưu file
-        // Storage::put('public/' . $path, $qr);
-
-        // return response()->json([
-        //     'success' => true,
-        //     'message' => 'Phiên điểm danh đã mở.',
-        //     'data'    => [
-        //         'session_id'    => $session->id,
-        //         'class_code'    => $class->class_code,
-        //         'date'          => $session->date,
-        //         'check_number'  => $session->check_number,
-        //         'qr_expires_at' => $session->qr_expires_at,
-        //         'qr_image_url'  => Storage::url($path),
-        //     ],
-        // ], 201);
-
-        $filename = 'session_' . $session->id . '_' . time() . '.svg';
-        $storagePath = storage_path('app/public/qr/sessions');
-
-        if (!file_exists($storagePath)) {
-            mkdir($storagePath, 0755, true);
-        }
-
-        $path = $storagePath . '/' . $filename;
-
-        $renderer = new ImageRenderer(
-            new RendererStyle(300),
-            new SvgImageBackEnd()
-        );
-
-        $writer = new Writer($renderer);
-        $qr = $writer->writeString($payload);
-
-        file_put_contents($path, $qr);
 
         return response()->json([
             'success' => true,
@@ -113,7 +72,7 @@ class SessionController
                 'date'          => $session->date,
                 'check_number'  => $session->check_number,
                 'qr_expires_at' => $session->qr_expires_at,
-                'qr_image_url'  => asset('storage/' . $path),
+                'qr_payload'    => $payload, // frontend uses this to draw the QR
             ],
         ], 201);
     }

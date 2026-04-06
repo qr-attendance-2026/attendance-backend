@@ -4,7 +4,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\Admin\UserController;
-
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Admin\ImportController;
 use App\Http\Controllers\Admin\CourseClassController as AdminClassController;
@@ -17,42 +16,36 @@ use App\Http\Controllers\Student\ProfileController;
 use App\Http\Controllers\Student\AttendanceController as StudentAttendanceController;
 
 
-
 Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
 
-//Public routes (no token required) 
+// Public routes (no token required)
 Route::post('/auth/login', [AuthController::class, 'login']);
- 
-//Authenticated routes 
+
+// Authenticated routes
 Route::middleware('auth:sanctum')->group(function () {
-
     Route::post('/auth/logout', [AuthController::class, 'logout']);
-    Route::get('/auth/me', [AuthController::class, 'me']);
+    Route::get('/auth/me',     [AuthController::class, 'me']);
     Route::post('/auth/change-password', [AuthController::class, 'changePassword']);
-}
-);
+});
 
-//Admin
+// ── Admin ─────────────────────────────────────────────────────────────────────
 Route::middleware(['auth:sanctum', 'role:admin'])->prefix('admin')->group(function () {
 
     // Bulk import from Excel
-    Route::post('import/students',  [ImportController::class, 'students']);
-    Route::post('import/teachers',  [ImportController::class, 'teachers']);
-    Route::post('import/schedule',  [ImportController::class, 'schedule']);
+    Route::post('import/students', [ImportController::class, 'students']);
+    Route::post('import/teachers', [ImportController::class, 'teachers']);
+    Route::post('import/schedule', [ImportController::class, 'schedule']);
 
     // User management
-
-    Route::get('users', [UserController::class, 'index']);
-    Route::get('users/{id}', [UserController::class, 'show']);
-    Route::post('/users', [UserController::class,'store']); //tạo acc bằng tay
-    Route::put('users/{id}', [UserController::class, 'update']);
-    Route::delete('users/{id}', [UserController::class, 'destroy']);
-    Route::patch('users/{id}/toggle-active', [UserController::class, 'toggleActive']);
-    Route::post('users/{id}/reset-password', [UserController::class, 'resetPassword']);
-
-
+    Route::get('users',                        [UserController::class, 'index']); //all users
+    Route::get('users/{id}',                   [UserController::class, 'show']); //single users
+    Route::post('users',                       [UserController::class, 'store']); //create users
+    Route::put('users/{id}',                   [UserController::class, 'update']); //update users
+    Route::delete('users/{id}',                [UserController::class, 'destroy']); //delete users
+    Route::patch('users/{id}/toggle-active',   [UserController::class, 'toggleActive']); //active/inactive users
+    Route::post('users/{id}/reset-password',   [UserController::class, 'resetPassword']); //reset password users
 
     // Subjects
     Route::apiResource('subjects', SubjectController::class);
@@ -62,87 +55,49 @@ Route::middleware(['auth:sanctum', 'role:admin'])->prefix('admin')->group(functi
     Route::post('course-classes/{id}/enroll', [AdminClassController::class, 'enroll']);
 
     // Reports
-    Route::get('reports/attendance', [ReportController::class, 'attendance']);
-    Route::get('reports/attendance/export', [ReportController::class, 'export']);
-    Route::get('reports/students/{studentId}/history',[ReportController::class, 'studentHistory']);
+    Route::get('reports/attendance',                          [ReportController::class, 'attendance']);
+    Route::get('reports/attendance/export',                   [ReportController::class, 'export']);
+    Route::get('reports/students/{studentId}/history',        [ReportController::class, 'studentHistory']);
 });
 
-//Teacher
+// ── Teacher ───────────────────────────────────────────────────────────────────
 Route::middleware(['auth:sanctum', 'role:teacher'])->prefix('teacher')->group(function () {
 
     // Own class list
-    Route::get('course-classes',        [TeacherClassController::class, 'index']);
-
-    Route::post('course-classes',       [TeacherClassController::class, 'store']);
-
-    Route::get('course-classes/{id}',   [TeacherClassController::class, 'show']);
+    Route::get('course-classes',       [TeacherClassController::class, 'index']);
+    Route::post('course-classes',      [TeacherClassController::class, 'store']);
+    Route::get('course-classes/{id}',  [TeacherClassController::class, 'show']);
 
     // QR Session management
-    Route::post('sessions',             [SessionController::class, 'open']);
-    Route::post('sessions/{id}/close',  [SessionController::class, 'close']);
-    Route::get('sessions/{id}/live',    [SessionController::class, 'live']);
+    Route::post('sessions',            [SessionController::class, 'open']);
+    Route::post('sessions/{id}/close', [SessionController::class, 'close']);
+    Route::get('sessions/{id}/live',   [SessionController::class, 'live']);
 
     // Attendance — teacher scans student QR
-    Route::post('attendance/scan',      [TeacherAttendanceController::class, 'scan']);
-    Route::patch('attendance/{id}',     [TeacherAttendanceController::class, 'override']);
+    Route::post('attendance/scan',     [TeacherAttendanceController::class, 'scan']);
+    Route::patch('attendance/{id}',    [TeacherAttendanceController::class, 'override']);
 
     // Reports
-    Route::get('reports/{courseClassId}',[TeacherAttendanceController::class, 'report']);
-    Route::get('reports/{courseClassId}/export',[TeacherAttendanceController::class, 'export']);
+    Route::get('reports/{courseClassId}',        [TeacherAttendanceController::class, 'report']);
+    Route::get('reports/{courseClassId}/export', [TeacherAttendanceController::class, 'export']);
 });
 
-//Student 
+// ── Student ───────────────────────────────────────────────────────────────────
+
 Route::middleware(['auth:sanctum', 'role:student'])->prefix('student')->group(function () {
 
-    // Profile + QR
-    Route::get('profile',    [ProfileController::class, 'show']);
+    //Profile
+    Route::get('profile', [ProfileController::class, 'show']);
     Route::put('profile',    [ProfileController::class, 'update']);
     Route::get('qr-code',    [ProfileController::class, 'qrCode']);
-
-    // Attendance — student scans room QR
+ 
+    // Attendance - scan room QR
     Route::post('attendance/check-in', [StudentAttendanceController::class, 'checkIn']);
-    Route::get('attendance',           [StudentAttendanceController::class, 'history']);
     Route::get('attendance/summary',   [StudentAttendanceController::class, 'summary']);
+    Route::get('attendance',           [StudentAttendanceController::class, 'history']);
 
-    // Own schedule
+    // Schedule
     Route::get('schedule', [ProfileController::class, 'schedule']);
-    Route::get('/courses', [ProfileController::class, 'getCourses']);
-
-    // Thêm dòng này để xem danh sách điểm danh 
-    Route::get('/attendances', [AttendanceController::class, 'index']);
-    // Nằm ngoài group student
-    Route::post('/attendance/scan', [AttendanceController::class, 'scan']);
-
-
-    Route::get('/test-qr', function () {
-        // 1. Tìm user sinh viên
-        $user = User::find(1); 
-        if (!$user) return "Lỗi: Không tìm thấy User ID 1";
-    
-        // 2. Giả lập đăng nhập
-        Auth::login($user);
-    
-        // 3. Tạo payload
-        $qrPayload = json_encode([
-            'course_class_id' => 1,
-            'date'            => '2024-05-20',
-            'check_number'    => 1
-        ]);
-    
-        // 4. Gọi Controller (Dùng \Illuminate\Http\Request để ép kiểu chuẩn)
-        $fakeRequest = \Illuminate\Http\Request::create('/api/student/attendance/check-in', 'POST', [
-            'qr_payload' => $qrPayload
-        ]);
-        
-        // Gán user vào request này để controller nhận được $request->user()
-        $fakeRequest->setUserResolver(fn() => $user);
-    
-        return app(\App\Http\Controllers\Student\AttendanceController::class)->checkIn($fakeRequest);
-    });
+    Route::get('courses', [ProfileController::class, 'getCourses']);
 
 });
-
-
-
-
-

@@ -7,13 +7,12 @@ use App\Models\User;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Storage;
 use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Maatwebsite\Excel\Concerns\WithValidation;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 use PhpOffice\PhpSpreadsheet\Shared\Date;
-
+use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
  
 
 class StudentsImport implements ToCollection, WithHeadingRow, WithValidation
@@ -34,8 +33,8 @@ class StudentsImport implements ToCollection, WithHeadingRow, WithValidation
 
                     //Xử lý format dữ liệu từ file excel
                     $genderMap = [
-                        'Nam' => 'male',
-                        'Nữ'  => 'female',
+                        'nam' => 'male',
+                        'nữ'  => 'female',
                     ];
                     $rawGender = mb_strtolower(trim($row['gender']));
                     $dbGender = $genderMap[$rawGender] ?? 'other';
@@ -50,7 +49,6 @@ class StudentsImport implements ToCollection, WithHeadingRow, WithValidation
                         }
                     }
 
-                    //Tao tai khoan sinh vien
                     $user = User::create([
                         'name'=>$row['name'],
                         'email' => $row['email'],
@@ -58,7 +56,6 @@ class StudentsImport implements ToCollection, WithHeadingRow, WithValidation
                         'role' => 'student',
                     ]);
                     
-                    //Tao thong tin sinh vien
                     $student = Student::create([
                         'user_id' => $user->id,
                         'student_code' => $row['student_code'],
@@ -69,27 +66,27 @@ class StudentsImport implements ToCollection, WithHeadingRow, WithValidation
                         'phone_number' => $row['phone_number']?? null,
                     ]);
                 
-                    //Generate personal QR code
                     $qrData= json_encode([
                         'type'=> 'student',
                         'student_code'=> $student->student_code,
                         'name'=> $user->name,
                     ]);
 
-                    $filename = 'student_'.$student->student_code.'.svg';
-                    $path = 'qr/students/' . $filename;
-                    
-                    $directory = storage_path('app/public/qr/students');
-                    if (!file_exists($directory)) {
-                        mkdir($directory, 0755, true);
-                    }
-                    
-                    QrCode::format('svg')
+                    $qrSvgString = QrCode::format('svg')
                         ->size(300)
                         ->errorCorrection('H')
-                        ->generate($qrData, storage_path('app/public/' . $path)); //lưu local, sau này có thể đổi sang s3
- 
-                    $student->update(['qr_code_path' => $path]);
+                        ->generate($qrData); 
+
+                    //Mã hóa chuỗi SVG thành định dạng Data URI (Base64) u
+                    $base64Svg = "data:image/svg+xml;base64," . base64_encode($qrSvgString);
+
+                    //Upload Cloudinary
+                    $uploadedFileUrl = Cloudinary::uploadApi()->upload($base64Svg, [
+                        'folder' => 'qr/students', 
+                        'public_id' => 'student_' . $student->student_code 
+                    ])['secure_url']; //(https)
+
+                    $student->update(['qr_code_path' => $uploadedFileUrl]);
  
                     $this->results['created']++;
 

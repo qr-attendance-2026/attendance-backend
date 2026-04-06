@@ -2,101 +2,172 @@
 
 namespace App\Http\Controllers\Student;
 
-use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use App\Models\CourseClass;
+use Illuminate\Support\Facades\Storage;
 
-class ProfileController extends Controller
+class ProfileController
 {
-    /**
-     * 1. GET /student/profile
-     * Hiển thị thông tin chi tiết sinh viên
-     */
-    public function show(Request $request)
+    // ────────────────────────────────────────────────────────────────────
+    // GET /api/student/profile
+    // Own profile information (no QR — use GET /api/student/qr-code for that)
+    // ────────────────────────────────────────────────────────────────────
+    public function show(Request $request): JsonResponse
     {
-        /** @var \App\Models\User $user */
-        $user = Auth::user();
-        
-        if ($user) {
-            // Load quan hệ để lấy thông tin lớp học của sinh viên
-            $user->load(['student.courseClasses']);
-        }
+        $user    = $request->user();
+        $student = $user->student;
 
-        if ($request->wantsJson()) {
-            return response()->json([
-                'success' => true,
-                'data' => $user
-            ]);
-        }
-
-        return view('student.profile.show', compact('user'));
+        return response()->json([
+            'success' => true,
+            'data'    => [
+                'id'           => $user->id,
+                'name'         => $user->name,
+                'email'        => $user->email,
+                'student_code' => $student->student_code,
+                'cohort_class' => $student->cohort_class,
+                'date_of_birth'=> $student->date_of_birth,
+                'gender'       => $student->gender,
+                'phone_number' => $student->phone_number,
+            ],
+        ]);
     }
 
-    /**
-     * 2. PUT /student/profile
-     * Cập nhật thông tin cá nhân (Số điện thoại, địa chỉ, mật khẩu...)
-     */
+    // ────────────────────────────────────────────────────────────────────
+    // PUT /api/student/profile
+    // Students can update: phone_number, cohort_class, and password.
+    // Other fields (name, email, student_code, gender, dob) are managed
+    // by the admin and are not editable by the student.
+    // ────────────────────────────────────────────────────────────────────
     public function update(Request $request): JsonResponse
     {
-        /** @var \App\Models\User $user */
-        $user = Auth::user();
-        
-        /** @var \App\Models\Student $student */
+        $user    = $request->user();
         $student = $user->student;
 
-        $request->validate([
-            'phone' => 'nullable|string|max:15',
-            'address' => 'nullable|string|max:255',
-            'password' => 'nullable|string|min:8|confirmed',
+        $validated = $request->validate([
+            'phone_number'        => ['nullable', 'string', 'max:15'],
+            'cohort_class'        => ['nullable', 'string', 'max:50'],
+            'current_password'    => ['required_with:password', 'string'],
+            'password'            => ['nullable', 'string', 'min:8', 'confirmed'],
         ]);
 
-        // Cập nhật thông tin vào bảng students
+        // Update student table fields
         $student->update([
-            'phone' => $request->phone,
-            'address' => $request->address,
+            'phone_number' => $validated['phone_number'] ?? $student->phone_number,
+            'cohort_class' => $validated['cohort_class'] ?? $student->cohort_class,
         ]);
 
-        // Nếu người dùng có nhập mật khẩu mới thì cập nhật bảng users
+        // Update password only if provided and current password is correct
         if ($request->filled('password')) {
+            if (!Hash::check($request->current_password, $user->password)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Mật khẩu hiện tại không đúng.',
+                ], 422);
+            }
+
             $user->update([
-                'password' => Hash::make($request->password),
+                'password' => Hash::make($validated['password']),
             ]);
         }
 
         return response()->json([
             'success' => true,
-            'message' => 'Cập nhật thông tin thành công!',
-            'data' => $student
+            'message' => 'Cập nhật thông tin thành công.',
+            'data'    => [
+                'phone_number' => $student->phone_number,
+                'cohort_class' => $student->cohort_class,
+            ],
         ]);
     }
 
-    /**
-     * 3. GET /student/qr-code
-     * Hiển thị mã QR cá nhân dựa trên MSSV
-     */
-    public function qrCode()
+    // ────────────────────────────────────────────────────────────────────
+    // GET /api/student/qr-code
+    // Returns the student's personal QR code (pre-generated SVG).
+    // The QR was created by the admin during Excel import and saved to
+    // storage/app/public/qr/students/{student_code}.svg
+    // qr_code_path in the students table holds the relative storage path.
+    // ────────────────────────────────────────────────────────────────────
+    public function qrCode(Request $request): JsonResponse
     {
-        /** @var \App\Models\User $user */
-        $user = Auth::user();
-        $student = $user->student;
-        
-        // Dữ liệu mã hóa vào QR cá nhân (thường dùng student_code)
-        $qrData = $student->student_code; 
+        $student = $request->user()->student;
 
-        return view('student.profile.qr', compact('student', 'qrData'));
-    }
+        if (!$student->qr_code_path) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Mã QR chưa được tạo. Vui lòng liên hệ quản trị viên.',
+            ], 404);
+        }
 
-    public function getCourses(Request $request)
-    {
-        // Lấy thông tin sinh viên đang đăng nhập cùng các lớp học của họ
-        $student = $request->user()->student->load('courseClasses');
+        // Build a publicly accessible URL for the SVG file.
+        // The file is stored under storage/app/public/, symlinked to public/storage/
+        $qrUrl = Storage::url($student->qr_code_path);
 
         return response()->json([
             'success' => true,
-            'data' => $student->courseClasses
+            'data'    => [
+                'student_code' => $student->student_code,
+                'qr_url'       => $qrUrl,            // e.g. /storage/qr/students/student_SV001.svg
+                'qr_path'      => $student->qr_code_path, // relative path in storage
+            ],
+        ]);
+    }
+
+    // ────────────────────────────────────────────────────────────────────
+    // GET /api/student/schedule
+    // Own enrolled classes with upcoming sessions.
+    // ────────────────────────────────────────────────────────────────────
+    public function schedule(Request $request): JsonResponse
+    {
+        $student = $request->user()->student;
+
+        $classes = $student->courseClasses()->with([
+            'subject',
+            'teacher.user',
+            'sessions' => fn($q) => $q
+                ->where('date', '>=', now()->toDateString())
+                ->orderBy('date'),
+        ])->get();
+
+        $schedule = $classes->map(fn($class) => [
+            'class_code'   => $class->class_code,
+            'subject_name' => $class->subject->subject_name,
+            'teacher_name' => $class->teacher->user->name ?? null,
+            'semester'     => $class->semester,
+            'sessions'     => $class->sessions->map(fn($s) => [
+                'session_id'   => $s->id,
+                'date'         => $s->date,
+                'check_number' => $s->check_number,
+                'is_active'    => $s->isActive(),
+            ]),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'data'    => $schedule,
+        ]);
+    }
+
+    // ────────────────────────────────────────────────────────────────────
+    // GET /api/student/courses
+    // List of enrolled course classes (lightweight, no sessions).
+    // ────────────────────────────────────────────────────────────────────
+    public function getCourses(Request $request): JsonResponse
+    {
+        $student = $request->user()->student;
+
+        $courses = $student->courseClasses()->with('subject')->get()
+            ->map(fn($class) => [
+                'id'           => $class->id,
+                'class_code'   => $class->class_code,
+                'subject_name' => $class->subject->subject_name,
+                'semester'     => $class->semester,
+                'academic_year'=> $class->academic_year,
+            ]);
+
+        return response()->json([
+            'success' => true,
+            'data'    => $courses,
         ]);
     }
 }

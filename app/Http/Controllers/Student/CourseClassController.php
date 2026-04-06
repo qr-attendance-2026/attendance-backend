@@ -2,12 +2,11 @@
 
 namespace App\Http\Controllers\Student;
 
-use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 
-class CourseClassController extends Controller
+class CourseClassController 
 {
     /**
      * Xem danh sách các lớp học đang tham gia và Thời khóa biểu (Hình 1 - Home)

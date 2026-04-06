@@ -2,15 +2,13 @@
 
 namespace App\Http\Controllers\Teacher;
 
-
-use App\Http\Controllers\Controller;
 use App\Models\AttendanceRecord;
 use App\Models\AttendanceSession;
 use App\Models\Student;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
-class AttendanceController extends Controller
+class AttendanceController 
 {
 
     public function scan(Request $request): JsonResponse
@@ -71,7 +69,7 @@ class AttendanceController extends Controller
             ],
             [
                 'status' => 'present',
-                'method' => 'qr_teacher_scan',
+                'method' => 'qr',
                 'checked_at' => now()
             ]
         );

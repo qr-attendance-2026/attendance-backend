@@ -4,6 +4,7 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use App\Http\Middleware\CheckRole;
+use App\Http\Middleware\ForceJsonResponse;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -13,6 +14,11 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Force JSON response for all API routes
+        $middleware->api(prepend: [
+            ForceJsonResponse::class,
+        ]);
+
         //Tắt bảo mật CSRF cho các đường dẫn API
         $middleware->validateCsrfTokens(except: [
             'users',   // Dành cho POST /users

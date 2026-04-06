@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Http\Controllers\Controller;
 use App\Imports\StudentsImport;
 use App\Imports\TeachersImport;
 use App\Imports\ScheduleImport;
@@ -29,8 +28,35 @@ class ImportController
     }
 
 
- 
-    // teachers() and schedule() follow the same pattern — create
-    // TeachersImport and ScheduleImport classes similarly.
+    public function teachers(Request $request): JsonResponse
+    {
+        $request->validate([
+            'file' => ['required', 'file', 'mimes:xlsx,xls,csv', 'max:10240'],
+        ]);
 
+        $import = new TeachersImport();
+        Excel::import($import, $request->file('file'));
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Import thành công.',
+            'data'    => $import->results,
+        ], 200);
+    }
+
+    public function schedule(Request $request): JsonResponse
+    {
+        $request->validate([
+            'file' => ['required', 'file', 'mimes:xlsx,xls', 'max:10240'],
+        ]);
+
+        $import = new ScheduleImport();
+        Excel::import($import, $request->file('file'));
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Import thành công.',
+            'data'    => $import->results(),
+        ], 200);
+    }
 }

@@ -60,6 +60,27 @@ return [
             'report' => false,
         ],
 
+        'cloudinary' => [
+            'driver' => 'cloudinary',
+            'url' => env('CLOUDINARY_URL'),
+        ],
+
+        // 'gcs' => [
+        //     'driver' => 'gcs',
+        //     'key_file_path' => env('GOOGLE_CLOUD_KEY_FILE') ? base_path(env('GOOGLE_CLOUD_KEY_FILE')) : null, 
+        //     'project_id' => env('GOOGLE_CLOUD_PROJECT_ID', 'your-project-id'), 
+        //     'bucket' => env('GOOGLE_CLOUD_STORAGE_BUCKET', 'your-bucket'),
+        //     'path_prefix' => env('GOOGLE_CLOUD_STORAGE_PATH_PREFIX', ''),
+        //     'storage_api_uri' => env('GOOGLE_CLOUD_STORAGE_API_URI', null),
+        //     'apiEndpoint' => env('GOOGLE_CLOUD_STORAGE_API_ENDPOINT', null),
+        //     'visibility' => 'private', 
+        //     'options' => [
+        //         'predefinedAcl' => null,
+        //     ],
+        //     'throw' => true,
+
+        // ],
+
     ],
 
     /*

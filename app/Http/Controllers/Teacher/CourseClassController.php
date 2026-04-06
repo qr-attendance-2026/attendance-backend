@@ -4,13 +4,12 @@ namespace App\Http\Controllers\Teacher;
 
 
 use Illuminate\Support\Facades\Auth;
-use App\Http\Controllers\Controller;
 use App\Models\CourseClass;
 use App\Models\Student;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 
-class CourseClassController extends Controller
+class CourseClassController 
 {
     
     public function index(Request $request): JsonResponse
