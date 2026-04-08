@@ -14,10 +14,10 @@ class CourseClassController
     
     public function index(Request $request): JsonResponse
     {
-        $teacher = Auth::id();
+        $teacher = $request->user()->teacher;
 
         $classes = CourseClass::with('students.user')
-            ->where('teacher_id', $teacher)
+            ->where('teacher_id', $teacher->id)
             ->get();
 
         return response()->json([
@@ -36,11 +36,11 @@ class CourseClassController
             'academic_year' => ['required','string']
         ]);
 
-        $teacher = (int) Auth::id();
+        $teacher = $request->user()->teacher;
 
         $class = CourseClass::create([
             'subject_id'    => $request->subject_id,
-            'teacher_id'    => $teacher,
+            'teacher_id'    => $teacher->id,
             'class_code'    => $request->class_code,
             'semester'      => $request->semester,
             'academic_year' => $request->academic_year
@@ -56,15 +56,19 @@ class CourseClassController
    
     public function show(Request $request, int $id): JsonResponse
     {
-        $teacher = Auth::id();
+        $teacher = $request->user()->teacher;
 
-        $class = CourseClass::with('students.user')
-            ->where('teacher_id', $teacher)
+        $classDetail = CourseClass::with([
+            'subject',        
+            'students.user',        
+            'sessions'
+        ])
+            ->where('teacher_id', $teacher->id)
             ->findOrFail($id);
 
         return response()->json([
             'success' => true,
-            'data' => $class
+            'data' => $classDetail
         ]);
     }
 
@@ -77,9 +81,9 @@ class CourseClassController
             'academic_year' => ['string']
         ]);
 
-        $teacher = Auth::id();
+        $teacher = $request->user()->teacher;
 
-        $class = CourseClass::where('teacher_id', $teacher)
+        $class = CourseClass::where('teacher_id', $teacher->id)
             ->findOrFail($id);
 
         $class->update($request->only([
@@ -98,9 +102,9 @@ class CourseClassController
    
     public function destroy(Request $request, int $id): JsonResponse
     {
-        $teacher = Auth::id();
+        $teacher = $request->user()->teacher;
 
-        $class = CourseClass::where('teacher_id', $teacher)
+        $class = CourseClass::where('teacher_id', $teacher->id)
             ->findOrFail($id);
 
         $class->delete();
@@ -119,9 +123,9 @@ class CourseClassController
             'student_ids.*' => ['integer','exists:students,id']
         ]);
 
-        $teacher = Auth::id();
+        $teacher = $request->user()->teacher;
 
-        $class = CourseClass::where('teacher_id', $teacher)
+        $class = CourseClass::where('teacher_id', $teacher->id)
             ->findOrFail($id);
 
         $class->students()->syncWithoutDetaching($request->student_ids);
@@ -135,9 +139,9 @@ class CourseClassController
     
     public function removeStudent(Request $request, int $id, int $studentId): JsonResponse
     {
-        $teacher = Auth::id();
+        $teacher = $request->user()->teacher;
 
-        $class = CourseClass::where('teacher_id', $teacher)
+        $class = CourseClass::where('teacher_id', $teacher->id)
             ->findOrFail($id);
 
         $class->students()->detach($studentId);
