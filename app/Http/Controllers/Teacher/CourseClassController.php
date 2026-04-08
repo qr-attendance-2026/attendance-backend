@@ -16,7 +16,7 @@ class CourseClassController
     {
         $teacher = $request->user()->teacher;
 
-        $classes = CourseClass::with('students.user')
+        $classes = CourseClass::with(['students.user', 'subject'])
             ->where('teacher_id', $teacher->id)
             ->get();
 
