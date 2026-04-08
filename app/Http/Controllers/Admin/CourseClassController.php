@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Admin;
 
 use Illuminate\Http\Request;
+use App\Models\CourseClass;
+use App\Models\Schedule;
 
 class CourseClassController
 {   
@@ -11,7 +13,7 @@ class CourseClassController
         return CourseClass::with(['subject', 'teacher'])->get();
     }   
 
-    public function show(int $id): JsonResponse
+    public function show(int $id)
     {
         $class = CourseClass::with([
             'subject',
@@ -25,7 +27,7 @@ class CourseClassController
         return response()->json(['data' => $class]);
     }
 
-    public function store(Request $request): JsonResponse
+    public function store(Request $request)
     {
         $validated = $request->validate([
             'subject_id'     => ['required', 'integer', 'exists:subjects,id'],
@@ -63,7 +65,7 @@ class CourseClassController
         ], 201);
     }   
 
-    public function update(Request $request, int $id): JsonResponse
+    public function update(Request $request, int $id)
     {
         $class = CourseClass::findOrFail($id);
 
@@ -106,7 +108,7 @@ class CourseClassController
         ]);
     }       
 
-    public function destroy(int $id): JsonResponse
+    public function destroy(int $id)
     {
         $class = CourseClass::findOrFail($id);
         $class->delete();
@@ -118,7 +120,7 @@ class CourseClassController
     }   
 
     // enroll() method — body: { student_ids: [1, 2, 3] }
-    public function enroll(Request $request, int $id): JsonResponse
+    public function enroll(Request $request, int $id)
     {
         $request->validate([
             'student_ids'   => ['required', 'array'],

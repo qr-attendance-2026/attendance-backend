@@ -10,9 +10,6 @@ class UserController extends Controller
     //List users
     public function index(){
 
-        // $users = User::orderBy('id', 'desc')->get();
-        // return response()->json($users, 200);
-
         $users = User::with(['student', 'teacher'])
             ->orderBy('created_at', 'desc')
             ->paginate(20);
@@ -20,12 +17,7 @@ class UserController extends Controller
         return response()->json(['success' => true, 'data' => $users]);
     }
 
-    // public function show(int $id)
-    // {
-    //     $user = User::findOrFail($id);
-    //     return response()->json($user, 200);
-    // }
-    public function show(int $id): JsonResponse
+    public function show(int $id)
     {
         $user = User::with(['student', 'teacher'])->findOrFail($id);
         return response()->json(['success' => true, 'data' => $user]);
