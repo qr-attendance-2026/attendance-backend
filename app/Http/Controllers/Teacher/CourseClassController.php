@@ -16,7 +16,7 @@ class CourseClassController
     {
         $teacher = $request->user()->teacher;
 
-        $classes = CourseClass::with(['students.user', 'subject'])
+        $classes = CourseClass::with(['students.user', 'subject', 'schedules'])
             ->where('teacher_id', $teacher->id)
             ->get();
 
@@ -61,7 +61,8 @@ class CourseClassController
         $classDetail = CourseClass::with([
             'subject',        
             'students.user',        
-            'sessions'
+            'sessions',
+            'schedules'
         ])
             ->where('teacher_id', $teacher->id)
             ->findOrFail($id);
