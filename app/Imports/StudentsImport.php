@@ -83,7 +83,7 @@ class StudentsImport implements ToCollection, WithHeadingRow, WithValidation
                             'type'         => 'student',
                             'student_code' => $student->student_code,
                             'name'         => $user->name,
-                        ]);
+                        ],JSON_UNESCAPED_UNICODE);
 
                         $qrSvgString = QrCode::format('svg')
                             ->size(300)
