@@ -17,7 +17,7 @@ class AuthController
     // Public — no token required.
     // Returns a Sanctum token + full user object with role-specific profile.
     // ────────────────────────────────────────────────────────────────────
-    public function login(Request $request): JsonResponse
+    public function login(Request $request)
     {
         $request->validate([
             'email'    => ['required', 'email'],

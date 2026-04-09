@@ -22,26 +22,29 @@ class StudentsImport implements ToCollection, WithHeadingRow, WithValidation
     public function collection(Collection $rows): void
     {
         foreach ($rows as $index => $row) {
+            $student = null;
+            $user    = null;
+            $skipped = false;
+
             try {
-                DB::transaction(function () use ($row) {
- 
-                    // Skip if email already exists
+                DB::transaction(function () use ($row, &$student, &$user, &$skipped) {
+
+                    // Skip nếu email đã tồn tại
                     if (User::where('email', $row['email'])->exists()) {
-                        $this->results['skipped']++;
+                        $skipped = true;
                         return;
                     }
 
-                    //Xử lý format dữ liệu từ file excel
+                    // Xử lý format dữ liệu từ file excel
                     $genderMap = [
                         'nam' => 'male',
                         'nữ'  => 'female',
                     ];
-                    $rawGender = mb_strtolower(trim($row['gender']));
-                    $dbGender = $genderMap[$rawGender] ?? 'other';
+                    $rawGender = mb_strtolower(trim($row['gender'] ?? ''));
+                    $dbGender  = $genderMap[$rawGender] ?? 'other';
 
                     $dob = null;
-                    if (isset($row['date_of_birth'])) {
-     
+                    if (!empty($row['date_of_birth'])) {
                         if (is_numeric($row['date_of_birth'])) {
                             $dob = Date::excelToDateTimeObject($row['date_of_birth'])->format('Y-m-d');
                         } else {
@@ -50,54 +53,67 @@ class StudentsImport implements ToCollection, WithHeadingRow, WithValidation
                     }
 
                     $user = User::create([
-                        'name'=>$row['name'],
-                        'email' => $row['email'],
+                        'name'     => $row['name'],
+                        'email'    => $row['email'],
                         'password' => Hash::make($row['student_code']),
-                        'role' => 'student',
+                        'role'     => 'student',
                     ]);
-                    
+
                     $student = Student::create([
-                        'user_id' => $user->id,
+                        'user_id'      => $user->id,
                         'student_code' => $row['student_code'],
-                        'name' => $row['name'],
+                        'name'         => $row['name'],
                         'cohort_class' => $row['cohort_class'] ?? null,
-                        'date_of_birth' => $dob,
-                        'gender' => $dbGender,
-                        'phone_number' => $row['phone_number']?? null,
+                        'date_of_birth'=> $dob,
+                        'gender'       => $dbGender,
+                        'phone_number' => $row['phone_number'] ?? null,
                     ]);
-                
-                    $qrData= json_encode([
-                        'type'=> 'student',
-                        'student_code'=> $student->student_code,
-                        'name'=> $user->name,
-                    ]);
-
-                    $qrSvgString = QrCode::format('svg')
-                        ->size(300)
-                        ->errorCorrection('H')
-                        ->generate($qrData); 
-
-                    //Mã hóa chuỗi SVG thành định dạng Data URI (Base64) u
-                    $base64Svg = "data:image/svg+xml;base64," . base64_encode($qrSvgString);
-
-                    //Upload Cloudinary
-                    $uploadedFileUrl = Cloudinary::uploadApi()->upload($base64Svg, [
-                        'folder' => 'qr/students', 
-                        'public_id' => 'student_' . $student->student_code 
-                    ])['secure_url']; //(https)
-
-                    $student->update(['qr_code_path' => $uploadedFileUrl]);
- 
-                    $this->results['created']++;
-
                 });
-                
+
+                if ($skipped) {
+                    $this->results['skipped']++;
+                    continue;
+                }
+
+                if ($student) {
+                    // Upload QR code lên Cloudinary — tách ra ngoài transaction
+                    // để lỗi upload không làm rollback dữ liệu student đã tạo
+                    try {
+                        $qrData = json_encode([
+                            'type'         => 'student',
+                            'student_code' => $student->student_code,
+                            'name'         => $user->name,
+                        ]);
+
+                        $qrSvgString = QrCode::format('svg')
+                            ->size(300)
+                            ->errorCorrection('H')
+                            ->generate($qrData);
+
+                        $base64Svg = "data:image/svg+xml;base64," . base64_encode($qrSvgString);
+
+                        $uploadedFileUrl = Cloudinary::uploadApi()->upload($base64Svg, [
+                            'folder'    => 'qr/students',
+                            'public_id' => 'student_' . $student->student_code,
+                        ])['secure_url'];
+
+                        $student->update(['qr_code_path' => $uploadedFileUrl]);
+
+                    } catch (\Throwable $qrEx) {
+                        // Log warning nhưng không báo lỗi — student đã được tạo thành công
+                        \Illuminate\Support\Facades\Log::warning(
+                            '[Import] QR upload thất bại cho student ' . $student->student_code . ': ' . $qrEx->getMessage()
+                        );
+                    }
+
+                    $this->results['created']++;
+                }
+
             } catch (\Throwable $e) {
                 $this->results['errors'][] = [
-                    'row' => $index + 2, // +1 for 0-based index, +1 for header
+                    'row'    => $index + 2,
                     'email'  => $row['email'] ?? '?',
                     'reason' => $e->getMessage(),
-
                 ];
             }
         }
