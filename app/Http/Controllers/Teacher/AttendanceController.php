@@ -71,7 +71,8 @@ class AttendanceController
             [
                 'status' => 'present',
                 'method' => 'qr',
-                'checked_at' => now()
+                'checked_at' => now(),
+                'is_makeup' => false
             ]
         );
 

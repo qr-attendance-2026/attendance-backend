@@ -17,7 +17,7 @@ use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 
 class StudentsImport implements ToCollection, WithHeadingRow, WithValidation
 {
-    public array $results = ['created' => 0, 'skipped' => 0, 'errors' => []];
+    public array $results = ['created' => 0, 'skipped' => 0, 'errors' => [], 'students' => []];
  
     public function collection(Collection $rows): void
     {
@@ -75,39 +75,34 @@ class StudentsImport implements ToCollection, WithHeadingRow, WithValidation
                     continue;
                 }
 
-                if ($student) {
-                    // Upload QR code lên Cloudinary — tách ra ngoài transaction
-                    // để lỗi upload không làm rollback dữ liệu student đã tạo
-                    try {
-                        $qrData = json_encode([
-                            'type'         => 'student',
-                            'student_code' => $student->student_code,
-                            'name'         => $user->name,
-                        ],JSON_UNESCAPED_UNICODE);
+                    $qrData = json_encode([
+                        'type'         => 'student',
+                        'student_code' => $student->student_code,
+                        'name'         => $user->name,
+                    ],JSON_UNESCAPED_UNICODE);
 
-                        $qrSvgString = QrCode::format('svg')
-                            ->size(300)
-                            ->errorCorrection('H')
-                            ->generate($qrData);
+                    $qrSvgString = QrCode::format('svg')
+                        ->size(300)
+                        ->errorCorrection('H')
+                        ->generate($qrData);
 
-                        $base64Svg = "data:image/svg+xml;base64," . base64_encode($qrSvgString);
+                    $base64Svg = "data:image/svg+xml;base64," . base64_encode($qrSvgString);
 
-                        $uploadedFileUrl = Cloudinary::uploadApi()->upload($base64Svg, [
-                            'folder'    => 'qr/students',
-                            'public_id' => 'student_' . $student->student_code,
-                        ])['secure_url'];
+                    $uploadedFileUrl = Cloudinary::uploadApi()->upload($base64Svg, [
+                        'folder'    => 'qr/students',
+                        'public_id' => 'student_' . $student->student_code,
+                    ])['secure_url'];
 
-                        $student->update(['qr_code_path' => $uploadedFileUrl]);
+                    $student->update(['qr_code_path' => $uploadedFileUrl]);
 
-                    } catch (\Throwable $qrEx) {
-                        // Log warning nhưng không báo lỗi — student đã được tạo thành công
-                        \Illuminate\Support\Facades\Log::warning(
-                            '[Import] QR upload thất bại cho student ' . $student->student_code . ': ' . $qrEx->getMessage()
-                        );
-                    }
+                    $this->results['students'][] = [
+                        'student_code' => $student->student_code,
+                        'name'         => $user->name,
+                        'email'        => $user->email,
+                        'qr_code_path' => $uploadedFileUrl,
+                    ];
 
-                    $this->results['created']++;
-                }
+                $this->results['created']++;
 
             } catch (\Throwable $e) {
                 $this->results['errors'][] = [
