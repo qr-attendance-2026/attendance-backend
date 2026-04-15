@@ -86,6 +86,7 @@ class AttendanceController
             'data' => [
                 'student_code' => $student->student_code,
                 'name' => $student->user->name,
+                'cohort_class' => $student->cohort_class,
                 'status' => $record->status,
                 'checked_at' => $record->checked_at,
                 'already_done' => !$wasJustCreated,

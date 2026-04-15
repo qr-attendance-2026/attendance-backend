@@ -62,7 +62,8 @@ return [
 
         'cloudinary' => [
             'driver' => 'cloudinary',
-            'url' => env('CLOUDINARY_URL'),
+            'cloud'  => env('CLOUDINARY_CLOUD_NAME'),
+            'url'    => env('CLOUDINARY_URL'),
         ],
 
         // 'gcs' => [

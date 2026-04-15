@@ -21,17 +21,13 @@ return [
     */
     'notification_url' => env('CLOUDINARY_NOTIFICATION_URL'),
 
-    /*
-    |--------------------------------------------------------------------------
-    | Cloudinary Configuration
-    |--------------------------------------------------------------------------
-    |
-    | Here you may configure your Cloudinary settings. Cloudinary is a cloud hosted
-    | media management service for all file uploads, storage, delivery and transformation needs.
-    |
-    |
-    */
-    'cloud_url' => env('CLOUDINARY_URL', 'cloudinary://'.env('CLOUDINARY_KEY').':'.env('CLOUDINARY_SECRET').'@'.env('CLOUDINARY_CLOUD_NAME')),
+    'cloud' => [
+        'cloud_name' => env('CLOUDINARY_CLOUD_NAME'),
+        'api_key'    => env('CLOUDINARY_API_KEY'),
+        'api_secret' => env('CLOUDINARY_API_SECRET'),
+    ],
+
+    'cloud_url' => env('CLOUDINARY_URL'),
 
     /**
      * Upload Preset From Cloudinary Dashboard

@@ -85,19 +85,16 @@
                 <table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-white">
                         <tr>
-                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">id</th>
-                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">session_id</th>
-                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">student_id</th>
+                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">student_code</th>
+                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">name</th>
+                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">cohort_class</th>
                             <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">status</th>
-                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">method</th>
-                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">checked_at</th>
-                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">is_makeup</th>
                         </tr>
                     </thead>
                     <tbody id="recordsTable" class="bg-white divide-y divide-gray-200 font-mono text-sm">
-                        <!-- Entries will go here -->
+                        <!-- Entries will go here -->   
                         <tr id="emptyRow">
-                            <td colspan="7" class="px-6 py-8 text-center text-gray-400 font-sans">No scans performed in this session yet.</td>
+                            <td colspan="4" class="px-6 py-8 text-center text-gray-400 font-sans">No scans performed in this session yet.</td>
                         </tr>
                     </tbody>
                 </table>
@@ -229,13 +226,10 @@
             setTimeout(() => { tr.className = 'hover:bg-gray-50 transition-colors'; }, 1000);
             
             tr.innerHTML = `
-                <td class="px-6 py-4 whitespace-nowrap text-gray-900">${record.id || '-'}</td>
-                <td class="px-6 py-4 whitespace-nowrap text-gray-900">${record.session_id || '-'}</td>
-                <td class="px-6 py-4 whitespace-nowrap text-gray-900">${record.student_id || '-'}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-gray-900">${record.student_code || '-'}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-gray-900">${record.name || '-'}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-gray-900">${record.cohort_class || '-'}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-gray-900"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">${record.status || 'present'}</span></td>
-                <td class="px-6 py-4 whitespace-nowrap text-gray-500">${record.method || 'qr'}</td>
-                <td class="px-6 py-4 whitespace-nowrap text-gray-500">${record.checked_at ? new Date(record.checked_at).toISOString().replace('T', ' ').substring(0, 19) : '-'}</td>
-                <td class="px-6 py-4 whitespace-nowrap text-gray-500">${(record.is_makeup ? 1 : 0)}</td>
             `;
             
             recordsTable.prepend(tr); // Add to top
