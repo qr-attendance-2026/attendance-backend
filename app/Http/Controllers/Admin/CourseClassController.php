@@ -10,7 +10,7 @@ class CourseClassController
 {   
     public function index()
     {
-        return CourseClass::with(['subject', 'teacher'])->get();
+        return CourseClass::with(['subject', 'teacher.user', 'schedules'])->get();
     }   
 
     public function show(int $id)

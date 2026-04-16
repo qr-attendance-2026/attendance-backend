@@ -8,8 +8,9 @@ use App\Models\Subject;
 use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
+use Maatwebsite\Excel\Concerns\SkipsEmptyRows;
 
-class ClassStudentsSheetImport implements ToCollection, WithHeadingRow
+class ClassStudentsSheetImport implements ToCollection, WithHeadingRow, SkipsEmptyRows
 {
     public array $results = ['enrolled' => 0, 'skipped' => 0, 'errors' => []];
 
@@ -19,12 +20,17 @@ class ClassStudentsSheetImport implements ToCollection, WithHeadingRow
         $subjectCache = Subject::pluck('id', 'subject_code');
 
         foreach ($rows as $index => $row) {
+            \Illuminate\Support\Facades\Log::info("Row $index passed to ClassStudentsSheetImport", $row->toArray());
             try {
                 $studentCode  = trim((string) $row['ma_sinh_vien']);
                 $subjectCode  = trim((string) $row['ma_mon']);
                 $classCode    = trim((string) $row['nmh']);
                 $semester     = trim((string) $row['hoc_ky']);
                 $academicYear = trim((string) $row['nam_hoc']);
+
+                if (empty($studentCode) && empty($subjectCode)) {
+                    continue;
+                }
 
                 // ── 1. Resolve student ───────────────────────────────────────
                 $student = Student::where('student_code', $studentCode)->first();
