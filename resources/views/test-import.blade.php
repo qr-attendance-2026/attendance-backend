@@ -151,7 +151,7 @@
             
             try {
                 // Hitting the Google Cloud production route
-                const response = await fetch('https://api-attendance-backend-520975280881.asia-southeast1.run.app/api/admin/import/students', {
+                const response = await fetch('http://localhost:8000/api/admin/import/students', {
                     method: 'POST',
                     body: formData,
                     headers: {

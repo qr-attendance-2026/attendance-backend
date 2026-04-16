@@ -9,28 +9,55 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
-use Maatwebsite\Excel\Concerns\WithValidation;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 use PhpOffice\PhpSpreadsheet\Shared\Date;
 use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
+use Maatwebsite\Excel\Concerns\SkipsEmptyRows;
  
-
-class StudentsImport implements ToCollection, WithHeadingRow, WithValidation
+class StudentsImport implements ToCollection, WithHeadingRow, SkipsEmptyRows
 {
     public array $results = ['created' => 0, 'skipped' => 0, 'errors' => [], 'students' => []];
  
     public function collection(Collection $rows): void
     {
         foreach ($rows as $index => $row) {
+            $row = collect($row)->mapWithKeys(function ($value, $key) {
+                $normalizedKey = strtolower(str_replace(' ', '_', trim($key)));
+                return [$normalizedKey => $value];
+            })->toArray();  
+
+            if ($index === 0) {
+                logger($row);
+            }   
+
+            // Loại bỏ khoảng trắng 2 đầu và kiểm tra xem có dòng nào thực sự rỗng không
+            $studentCode = trim($row['student_code'] ?? '');
+            $name        = trim($row['name'] ?? '');
+            $email       = trim($row['email'] ?? '');
+
+            if (empty($studentCode) && empty($name) && empty($email)) {
+                // Ignore completely empty rows not captured by SkipsEmptyRows
+                continue;
+            }
+
+            if (empty($studentCode) || empty($name) || empty($email)) {
+                $this->results['errors'][] = [
+                    'row'    => $index + 2,
+                    'email'  => $email ?: '?',
+                    'reason' => 'student_code, name, and email fields are required.',
+                ];
+                continue;
+            }
+
             $student = null;
             $user    = null;
             $skipped = false;
 
             try {
-                DB::transaction(function () use ($row, &$student, &$user, &$skipped) {
+                DB::transaction(function () use ($row, &$student, &$user, &$skipped, $studentCode, $name, $email) {
 
                     // Skip nếu email đã tồn tại
-                    if (User::where('email', $row['email'])->exists()) {
+                    if (User::where('email', $email)->exists()) {
                         $skipped = true;
                         return;
                     }
@@ -53,15 +80,15 @@ class StudentsImport implements ToCollection, WithHeadingRow, WithValidation
                     }
 
                     $user = User::create([
-                        'name'     => $row['name'],
-                        'email'    => $row['email'],
-                        'password' => Hash::make($row['student_code']),
+                        'name'     => $name,
+                        'email'    => $email,
+                        'password' => Hash::make($studentCode),
                         'role'     => 'student',
                     ]);
 
                     $student = Student::create([
                         'user_id'      => $user->id,
-                        'student_code' => $row['student_code'],
+                        'student_code' => $studentCode,
                         'name'         => $row['name'],
                         'cohort_class' => $row['cohort_class'] ?? null,
                         'date_of_birth'=> $dob,
@@ -83,6 +110,7 @@ class StudentsImport implements ToCollection, WithHeadingRow, WithValidation
 
                     $qrSvgString = QrCode::format('svg')
                         ->size(300)
+                        ->encoding('UTF-8')
                         ->errorCorrection('H')
                         ->generate($qrData);
 
@@ -113,15 +141,4 @@ class StudentsImport implements ToCollection, WithHeadingRow, WithValidation
             }
         }
     }
-
-    public function rules(): array
-    {
-        return [
-            '*.student_code' => ['required', 'string'],
-            '*.name'         => ['required', 'string'],
-            '*.email'        => ['required', 'email'],
-        ];
-    }
-
-
 }
