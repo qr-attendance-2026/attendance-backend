@@ -31,7 +31,7 @@ class SessionController
 
         $teacher = $request->user()->teacher;
 
-        // Verify this class belongs to the authenticated teacher
+        //GV chi được mở session cho lớp mình dạy
         $class = CourseClass::where('id', $request->course_class_id)
             ->where('teacher_id', $teacher->id)
             ->firstOrFail();
@@ -40,27 +40,22 @@ class SessionController
         $durationMinutes = (int) $request->input('duration_minutes', 15);
 
 
-        $payload = json_encode([
-            'session_token'   => Str::random(64),
+        
+        // BƯỚC 1: tạo session trước (CHƯA có payload)
+        $session = AttendanceSession::create([
             'course_class_id' => $class->id,
-            'class_code'      => $class->class_code,
             'date'            => now()->toDateString(),
             'check_number'    => $checkNumber,
-            'expires_at'      => now()->addMinutes($durationMinutes)->toDateTimeString(),
+            'qr_expires_at'   => now()->addMinutes($durationMinutes),
         ]);
 
+    // BƯỚC 2: payload NGẮN (KHÔNG overflow)
+        $payload = (string) $session->id;
 
-        $session = AttendanceSession::updateOrCreate(
-            [
-                'course_class_id' => $class->id,
-                'date'            => now()->toDateString(),
-                'check_number'    => $checkNumber,
-            ],
-            [
-                'qr_payload'    => $payload, // stored in DB — used for server-side validation
-                'qr_expires_at' => now()->addMinutes($durationMinutes),
-            ]
-        );
+        // BƯỚC 3: update lại payload
+        $session->update([
+            'qr_payload' => $payload
+        ]);
 
 
         return response()->json([

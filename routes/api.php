@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Route;
 
@@ -100,4 +101,9 @@ Route::middleware(['auth:sanctum', 'role:student'])->prefix('student')->group(fu
     Route::get('schedule', [ProfileController::class, 'schedule']);
     Route::get('courses', [ProfileController::class, 'getCourses']);
 
+});
+Route::get('/test', function () {
+    return response()->json([
+        'message' => 'BE OK'
+    ]);
 });
