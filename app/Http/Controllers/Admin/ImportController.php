@@ -13,20 +13,28 @@ class ImportController
 {
     public function students(Request $request): JsonResponse
     {
-        set_time_limit(0); // Import có thể mất nhiều thời gian
+        set_time_limit(300); // Limit import cho bulk
 
         $request->validate([
             'file' => ['required', 'file', 'mimes:xlsx,xls,csv', 'max:10240'],
         ]);
  
+        try {
+            
         $import = new StudentsImport();
         Excel::import($import, $request->file('file'));
- 
+
         return response()->json([
             'success' => true,
-            'message' => 'Import thành công.',
+            'message' => "Import thành công: {$import->results['created']} sinh viên mới, {$import->results['skipped']} bỏ qua.",
             'data'    => $import->results,
-        ], 200);
+        ]);
+    } catch (\Throwable $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Import thất bại: ' . $e->getMessage(),
+        ], 500);
+    }
     }
 
 
