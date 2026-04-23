@@ -34,10 +34,8 @@ class AuthController
             ]);
         }
  
-        // Revoke all previous tokens for this user (single-session policy)
-        // Remove this line if you want multiple devices logged in simultaneously
-        $user->tokens()->delete();
         // Create a new Sanctum token named after the user's role
+        // (multi-session: mỗi lần login tạo token mới, token cũ vẫn còn hiệu lực)
         $token = $user->createToken('auth_token_' . $user->role)->plainTextToken;
  
         // Build the profile payload based on role

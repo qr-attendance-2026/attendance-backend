@@ -33,6 +33,7 @@ class StudentsImport implements ToCollection, WithHeadingRow, SkipsEmptyRows, Wi
         // Pre-load all existing data from database (1 query mỗi lần chunk)
 
         $existingEmails   = User::pluck('email')->flip();     
+        // Lấy hết email trong DB ra để biết email nào đã tồn tại
         // flip trả về: ['admin@test.com' => 0, 'dh52201279@student.edu.vn' => 1, ...]
 
         $existingCodes    = Student::pluck('student_code')->flip();
@@ -118,7 +119,8 @@ class StudentsImport implements ToCollection, WithHeadingRow, SkipsEmptyRows, Wi
             // Lấy lại id của các user vừa tạo
             $emails   = array_column($toInsert, 'email');
             $userMap  = User::whereIn('email', $emails)->pluck('id', 'email'); //sql: select from where
-            // trả về ['a@test.com' => 101, 'b@test.com' => 102, ...]  // ← Map email → user_id
+            // thay vì lấy toàn bộ object User, chỉ lấy 2 cột và tạo thành mảng key-value:
+            //pluck('id', 'email') → mảng key-value: ['a@test.com' => 101, 'b@test.com' => 102, ...]
 
             $studentRows = [];
 
@@ -142,8 +144,12 @@ class StudentsImport implements ToCollection, WithHeadingRow, SkipsEmptyRows, Wi
 
 
         // ── Dispatch QR jobs after transaction succeeds ─────────────────────────
+        
         $codes    = array_column($toInsert, 'student_code');
-        $students = Student::whereIn('student_code', $codes)->get()->keyBy('student_code');
+        $students = Student::whereIn('student_code', $codes)->get()->keyBy('student_code'); 
+        //trả về Collection các Student object, đánh index bằng student_code : 
+        // ['DH001' => Student{id:3, ...},
+        //  'DH002' => Student{id:4, ...},
 
         foreach ($toInsert as $d) {
             //lấy student vừa tạo
@@ -153,7 +159,7 @@ class StudentsImport implements ToCollection, WithHeadingRow, SkipsEmptyRows, Wi
             GenerateStudentQrJob::dispatch(    //không tạo QR ngay, đẩy vào queue, ghi 1 record vào bảng jobs
                 $student->id,
                 $student->student_code,
-                $d['name'],
+                $d['name'], //tên lấy từ file excel
             );
 
             $this->results['created']++;

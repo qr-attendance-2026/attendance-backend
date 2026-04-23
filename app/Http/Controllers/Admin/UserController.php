@@ -8,11 +8,23 @@ use Illuminate\Http\Request;
 class UserController extends Controller
 {
     //List users
-    public function index(){
+    public function index(Request $request){
 
-        $users = User::with(['student', 'teacher'])
-            ->orderBy('created_at', 'desc')
-            ->paginate(20);
+        $query = User::with(['student', 'teacher'])
+            ->orderBy('created_at', 'desc');
+
+        if ($request->has('role')) {
+            $query->where('role', $request->query('role'));
+        }
+
+        $perPage = $request->query('per_page', 10);
+        
+        // If per_page is -1, fetch all without pagination (for frontend search)
+        if ($perPage == -1) {
+            $users = $query->get();
+        } else {
+            $users = $query->paginate($perPage);
+        }
 
         return response()->json(['success' => true, 'data' => $users]);
     }

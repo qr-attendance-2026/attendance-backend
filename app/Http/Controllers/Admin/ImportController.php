@@ -20,9 +20,9 @@ class ImportController
         ]);
  
         try {
-            
+
         $import = new StudentsImport();
-        Excel::import($import, $request->file('file'));
+        Excel::import($import, $request->file('file')); //đọc file excel
 
         return response()->json([
             'success' => true,
