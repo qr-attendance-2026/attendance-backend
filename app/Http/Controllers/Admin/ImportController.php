@@ -13,12 +13,14 @@ class ImportController
 {
     public function students(Request $request): JsonResponse
     {
+        set_time_limit(0); // Import có thể mất nhiều thời gian
+
         $request->validate([
-            'file' => ['required', 'file', 'mimes:xlsx,xls,csv', 'max:10240'], //dung lượng file k quá 10MB
+            'file' => ['required', 'file', 'mimes:xlsx,xls,csv', 'max:10240'],
         ]);
  
         $import = new StudentsImport();
-        Excel::import($import, $request->file('file')); //gọi thư viện excel, đẩy file sang StudentsImport xử lý
+        Excel::import($import, $request->file('file'));
  
         return response()->json([
             'success' => true,
